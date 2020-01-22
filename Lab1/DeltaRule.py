@@ -1,13 +1,12 @@
 import numpy as np
 
-#np.random.seed(1000)
-DEBUG = 1
+DEBUG = 0
 
 if DEBUG:
-
+    np.random.seed(1000)
     my_print = print
 else:
-    def my_print():
+    def my_print(*something):
         pass
 
 # generate inputs
@@ -45,7 +44,7 @@ class Delta:
         for i in range(self.EPOCH):
             d_W = -self.eta * np.dot(np.transpose(self.inputs), (np.dot(self.inputs, self.W) - self.targets))
             self.W = self.W + d_W
-            my_print("Epoch " + str(i))
+            print("Epoch " + str(i))
 
 
 if __name__ == '__main__':
