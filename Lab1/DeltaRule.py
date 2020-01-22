@@ -1,9 +1,10 @@
 import numpy as np
 
-np.random.seed(1000)
+#np.random.seed(1000)
 DEBUG = 1
 
 if DEBUG:
+
     my_print = print
 else:
     def my_print():
@@ -13,7 +14,7 @@ else:
 n_samples = np.random.randint(10, 100)
 n_x = np.random.randint(10, 100)
 X = np.random.normal(0, 1, (n_samples, n_x))
-
+my_print(X)
 l1 = np.ones(n_samples // 2)
 l2 = np.ones(n_samples - n_samples // 2) * (-1)
 T = np.append(l1, l2)
