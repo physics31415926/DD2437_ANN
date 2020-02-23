@@ -1,5 +1,6 @@
 from util import *
-
+import numpy as np
+from tqdm import trange
 class RestrictedBoltzmannMachine():
     '''
     For more details : A Practical Guide to Training Restricted Boltzmann Machines https://www.cs.toronto.edu/~hinton/absps/guideTR.pdf
@@ -76,30 +77,33 @@ class RestrictedBoltzmannMachine():
         """
 
         print ("learning CD1")
-        
+        errors = np.zeros(n_iterations)
         n_samples = visible_trainset.shape[0]
-
+        n_batches =int(n_samples/self.batch_size)
         for it in range(n_iterations):
 
 	    # [TODO TASK 4.1] run k=1 alternating Gibbs sampling : v_0 -> h_0 ->  v_1 -> h_1.
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
             # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
-
+            for i in range(n_batches):
+                v_0=visible_trainset[i:i+self.batch_size]
+                _,h_0=self.get_h_given_v(v_0)
+                _,v_k=self.get_v_given_h(h_0)
+                _,h_k=self.get_h_given_v(v_k)
             # [TODO TASK 4.1] update the parameters using function 'update_params'
-            
+                self.update_params(v_0,h_0,v_k,h_k)
             # visualize once in a while when visible layer is input images
-            
-            if it % self.rf["period"] == 0 and self.is_bottom:
-                
+            if it % 5 == 0 and self.is_bottom:              
                 viz_rf(weights=self.weight_vh[:,self.rf["ids"]].reshape((self.image_size[0],self.image_size[1],-1)), it=it, grid=self.rf["grid"])
-
             # print progress
             
-            if it % self.print_period == 0 :
+            _, h_0 = self.get_h_given_v(visible_trainset)
+            _, v_k = self.get_v_given_h(h_0)
+            errors[it]=np.sum((visible_trainset - v_k)**2)/n_samples
+            print ("iteration=%7d recon_loss=%4.4f"%(it, errors[it]))
 
-                print ("iteration=%7d recon_loss=%4.4f"%(it, np.linalg.norm(visible_trainset - visible_trainset)))
         
-        return
+        return errors
     
 
     def update_params(self,v_0,h_0,v_k,h_k):
@@ -118,9 +122,9 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
         
-        self.delta_bias_v += 0
-        self.delta_weight_vh += 0
-        self.delta_bias_h += 0
+        self.delta_bias_v = self.learning_rate*np.sum(v_0-v_k,axis=0)
+        self.delta_weight_vh = self.learning_rate*(np.dot(v_0.T,h_0)-np.dot(v_k.T,h_k))
+        self.delta_bias_h = self.learning_rate*(np.sum(h_0-h_k,axis=0))
         
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -146,8 +150,9 @@ class RestrictedBoltzmannMachine():
         n_samples = visible_minibatch.shape[0]
 
         # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of hidden layer (replace the zeros below) 
-        
-        return np.zeros((n_samples,self.ndim_hidden)), np.zeros((n_samples,self.ndim_hidden))
+        prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_vh))
+        samples = sample_binary(prob)
+        return prob,samples
 
 
     def get_v_given_h(self,hidden_minibatch):
@@ -178,16 +183,19 @@ class RestrictedBoltzmannMachine():
 
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
-            
-            pass
-            
+            support=self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
+            prob_label = softmax(support[:, :self.n_labels]) 
+            prob_img = sigmoid(support[:, self.n_labels:])
+            prob = np.concatenate((prob_label,prob_img),axis=1)
+            v_img = sample_binary(prob_img)  
+            v_label = sample_categorical(prob_label) 
+            samples = np.concatenate((v_label,v_img),axis=1) 
         else:
-                        
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass and zeros below)             
+            prob = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T))
+            samples = sample_binary(prob)
+        return prob,samples
 
-            pass
-        
-        return np.zeros((n_samples,self.ndim_visible)), np.zeros((n_samples,self.ndim_visible))
 
 
     
