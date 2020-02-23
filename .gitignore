@@ -1,3 +1,6 @@
 *.DS_Store
 *.xml
 \.idea
+*.pyc
+*.npy
+*.mp4
