@@ -64,6 +64,7 @@ class DeepBeliefNet():
         """
 
         n_samples = true_img.shape[0]
+        n_labels = true_lbl.shape[1]
 
         vis = true_img  # visible layer gets the image data
 
@@ -73,10 +74,19 @@ class DeepBeliefNet():
         # and read out the labels (replace pass below and 'predicted_lbl' to your predicted labels).
         # NOTE : inferring entire train/test set may require too much compute memory (depends on your system). In that case, divide into mini-batches.
 
-        for _ in range(self.n_gibbs_recog):
-            pass
+        print("drive the network bottom to top")
+        print("vis--hid")
+        out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
+        print("hid--pen")
+        out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
+        in3 = np.concatenate((out2, lbl), axis=1)
 
-        predicted_lbl = np.zeros(true_lbl.shape)
+        for _ in range(self.n_gibbs_recog):
+            print("pen+lbl--top")
+            final_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
+            in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)[1]
+
+        predicted_lbl = in3[:, -n_labels:]
 
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
@@ -92,20 +102,33 @@ class DeepBeliefNet():
         """
 
         n_sample = true_lbl.shape[0]
+        n_labels = true_lbl.shape[1]
 
         records = []
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
-        ax.set_xticks([]);
+        ax.set_xticks([])
         ax.set_yticks([])
 
         lbl = true_lbl
 
         # [TODO TASK 4.2] fix the label in the label layer and run alternating Gibbs sampling in the top RBM. From the top RBM, drive the network \ 
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
+        print("From the top RBM, drive the network")
+        # normal distribution
+        random_img = np.random.randn(n_sample, self.sizes['vis'])
+        out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
+        out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
+
+        in3 = np.concatenate((out2, lbl), axis=1)
 
         for _ in range(self.n_gibbs_gener):
-            vis = np.random.rand(n_sample, self.sizes["vis"])
+            out3 = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
+            in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(out3)[1]
+            in3[:, -n_labels:] = lbl[:, :]
+            pen = in3[:, :-n_labels]
+            hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
+            vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
@@ -145,6 +168,7 @@ class DeepBeliefNet():
             """ 
             CD-1 training for vis--hid 
             """
+            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
@@ -152,6 +176,9 @@ class DeepBeliefNet():
             """ 
             CD-1 training for hid--pen 
             """
+            # Get output from previous layer
+            out1 = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
+            self.rbm_stack["hid--pen"].cd1(out1, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
@@ -159,6 +186,11 @@ class DeepBeliefNet():
             """ 
             CD-1 training for pen+lbl--top 
             """
+            # Get output from previous layer
+            out2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(out1)[1]
+            # Concatenate the output and the labels
+            in3 = np.concatenate((out2, lbl_trainset), axis=1)
+            self.rbm_stack["pen+lbl--top"].cd1(in3, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
         return
