@@ -52,6 +52,9 @@ class DeepBeliefNet():
 
         self.print_period = 2000
 
+        self.vis_hid_errors = []
+        self.hid_pen_errors = []
+
         return
 
     def recognize(self, true_img, true_lbl):
@@ -168,7 +171,7 @@ class DeepBeliefNet():
             """ 
             CD-1 training for vis--hid 
             """
-            self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)
+            self.vis_hid_errors = self.rbm_stack["vis--hid"].cd1(vis_trainset, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="vis--hid")
 
             print("training hid--pen")
@@ -178,7 +181,7 @@ class DeepBeliefNet():
             """
             # Get output from previous layer
             out1 = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
-            self.rbm_stack["hid--pen"].cd1(out1, n_iterations)
+            self.hid_pen_errors = self.rbm_stack["hid--pen"].cd1(out1, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
             print("training pen+lbl--top")
