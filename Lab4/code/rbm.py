@@ -185,6 +185,9 @@ class RestrictedBoltzmannMachine():
             # [TODO TASK 4.1] compute probabilities and activations (samples from probabilities) of visible layer (replace the pass below). \
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
             support = self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
+
+            # threshold
+            support[support < -75] = -75
             prob_label = softmax(support[:, -self.n_labels:])
             prob_img = sigmoid(support[:, :-self.n_labels])
             prob = np.concatenate((prob_label, prob_img), axis=1)
@@ -263,7 +266,7 @@ class RestrictedBoltzmannMachine():
         else:
 
             # [TODO TASK 4.2] performs same computaton as the function 'get_v_given_h' but with directed connections (replace the pass and zeros below)             
-            prob = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_v_to_h))
+            prob = sigmoid(self.bias_v + np.dot(hidden_minibatch, self.weight_h_to_v))
             samples = sample_binary(prob)
 
         return prob, samples
@@ -281,8 +284,8 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_h_to_v += 1. /self.batch_size*self.learning_rate*np.dot(inps.transpose(), (trgs-preds))
-        self.delta_bias_v += 1. /self.batch_size*self.learning_rate*np.sum(trgs-preds, axis=0)
+        self.delta_weight_h_to_v += self.learning_rate*np.dot(inps.transpose(), (trgs-preds))
+        self.delta_bias_v += self.learning_rate*np.sum(trgs-preds, axis=0)
 
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
@@ -302,8 +305,8 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_v_to_h += 1. /self.batch_size*self.learning_rate*np.dot(inps.transpose(), (trgs-preds))
-        self.delta_bias_h += 1. /self.batch_size*self.learning_rate*np.sum(trgs-preds, axis=0)
+        self.delta_weight_v_to_h += self.learning_rate*np.dot(inps.transpose(), (trgs-preds))
+        self.delta_bias_h += self.learning_rate*np.sum(trgs-preds, axis=0)
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h

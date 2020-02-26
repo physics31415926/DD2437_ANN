@@ -3,6 +3,7 @@ from rbm import RestrictedBoltzmannMachine
 import numpy as np
 from matplotlib.pyplot import plot as plt
 
+
 class DeepBeliefNet():
     ''' 
     For more details : Hinton, Osindero, Teh (2006). A fast learning algorithm for deep belief nets. https://www.cs.toronto.edu/~hinton/absps/fastnc.pdf
@@ -55,7 +56,7 @@ class DeepBeliefNet():
 
         self.vis_hid_errors = []
         self.hid_pen_errors = []
-        self.label_log=[]
+        self.label_log = []
 
         return
 
@@ -229,10 +230,10 @@ class DeepBeliefNet():
             for it in range(n_iterations):
 
                 # Get batch
-                batch_start = int(it%(self.n_samples/self.batch_size))
-                batch_end = min([(batch_start + 1)*self.batch_size, self.n_samples])
-                vis_batch = vis_trainset[batch_start*self.batch_size:batch_end, :]
-                lbl_batch = lbl_trainset[batch_start*self.batch_size:batch_end, :]
+                batch_start = int(it % (self.n_samples / self.batch_size))
+                batch_end = min([(batch_start + 1) * self.batch_size, self.n_samples])
+                vis_batch = vis_trainset[batch_start * self.batch_size:batch_end, :]
+                lbl_batch = lbl_trainset[batch_start * self.batch_size:batch_end, :]
 
                 # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
                 vis_hid_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_batch)[1]
@@ -246,7 +247,7 @@ class DeepBeliefNet():
                     h_k = self.rbm_stack['pen+lbl--top'].get_h_given_v(v_k)[1]
 
                 # [TODO TASK 4.3] sleep phase : from the activities in the top RBM, drive the network top to bottom.
-                pen_hid_out = self.rbm_stack['hid--pen'].get_v_given_h_dir(v_k[:,:-n_labels])[1]
+                pen_hid_out = self.rbm_stack['hid--pen'].get_v_given_h_dir(v_k[:, :-n_labels])[1]
                 hid_vis_out = self.rbm_stack['vis--hid'].get_v_given_h_dir(pen_hid_out)[1]
 
                 # [TODO TASK 4.3] compute predictions : compute generative predictions from wake-phase activations, and recognize predictions from sleep-phase activations.
@@ -264,7 +265,7 @@ class DeepBeliefNet():
                 self.rbm_stack['pen_lbl--top'].update_params(pen_top_in, h_0, v_k, h_k)
 
                 # [TODO TASK 4.3] update generative parameters : here you will only use 'update_recognize_params' method from rbm class.
-                self.rbm_stack['hid--pen'].update_recognize_params(pen_hid_out, v_k[:,:-n_labels], pred_sleep_pen)
+                self.rbm_stack['hid--pen'].update_recognize_params(pen_hid_out, v_k[:, :-n_labels], pred_sleep_pen)
                 self.rbm_stack['vis--hid'].update_recognize_params(hid_vis_out, pen_hid_out, pred_sleep_hid)
                 if it % self.print_period == 0: print("iteration=%7d" % it)
 

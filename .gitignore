@@ -2,5 +2,4 @@
 *.xml
 \.idea
 *.pyc
-*.npy
 *.mp4
