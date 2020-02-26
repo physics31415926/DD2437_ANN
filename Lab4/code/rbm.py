@@ -91,10 +91,10 @@ class RestrictedBoltzmannMachine():
             for i in range(n_batches):
                 v_0 = visible_trainset[i*self.batch_size:i*self.batch_size + self.batch_size]
                 _, h_0 = self.get_h_given_v(v_0)
-                _, v_k = self.get_v_given_h(h_0)
-                _, h_k = self.get_h_given_v(v_k)
+                p_vk, v_k = self.get_v_given_h(h_0)
+                p_hk, h_k = self.get_h_given_v(v_k)
                 # [TODO TASK 4.1] update the parameters using function 'update_params'
-                self.update_params(v_0, h_0, v_k, h_k)
+                self.update_params(v_0, h_0, p_vk, p_hk)
             # visualize once in a while when visible layer is input images
             if it % 5 == 0 and self.is_bottom:
                 viz_rf(weights=self.weight_vh[:, self.rf["ids"]].reshape((self.image_size[0], self.image_size[1], -1)),
