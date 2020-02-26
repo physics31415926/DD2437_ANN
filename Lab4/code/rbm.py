@@ -89,7 +89,7 @@ class RestrictedBoltzmannMachine():
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
             # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
             for i in range(n_batches):
-                v_0 = visible_trainset[i:i + self.batch_size]
+                v_0 = visible_trainset[i*self.batch_size:i*self.batch_size + self.batch_size]
                 _, h_0 = self.get_h_given_v(v_0)
                 _, v_k = self.get_v_given_h(h_0)
                 _, h_k = self.get_h_given_v(v_k)
@@ -125,7 +125,7 @@ class RestrictedBoltzmannMachine():
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
 
         self.delta_bias_v = self.learning_rate * np.sum(v_0 - v_k, axis=0)
-        self.delta_weight_vh = self.learning_rate * (np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))
+        self.delta_weight_vh = self.learning_rate * (np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))/self.batch_size
         self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))
 
         self.bias_v += self.delta_bias_v
