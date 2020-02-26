@@ -89,7 +89,7 @@ class RestrictedBoltzmannMachine():
             # you may need to use the inference functions 'get_h_given_v' and 'get_v_given_h'.
             # note that inference methods returns both probabilities and activations (samples from probablities) and you may have to decide when to use what.
             for i in range(n_batches):
-                v_0 = visible_trainset[i:i + self.batch_size]
+                v_0 = visible_trainset[i*self.batch_size:i*self.batch_size + self.batch_size]
                 _, h_0 = self.get_h_given_v(v_0)
                 _, v_k = self.get_v_given_h(h_0)
                 _, h_k = self.get_h_given_v(v_k)
