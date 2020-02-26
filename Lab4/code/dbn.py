@@ -55,6 +55,7 @@ class DeepBeliefNet():
 
         self.vis_hid_errors = []
         self.hid_pen_errors = []
+        self.label_log=[]
 
         return
 
@@ -89,9 +90,8 @@ class DeepBeliefNet():
             print("pen+lbl--top")
             final_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)[1]
-
+            self.label_log.append(np.argmax(in3[:, -n_labels:], axis=1))
         predicted_lbl = in3[:, -n_labels:]
-
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         return
