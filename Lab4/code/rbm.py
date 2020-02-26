@@ -226,7 +226,7 @@ class RestrictedBoltzmannMachine():
         prob = sigmoid(self.bias_h + np.dot(visible_minibatch, self.weight_v_to_h))
         samples = sample_binary(prob)
 
-        return np.zeros((n_samples, self.ndim_hidden)), np.zeros((n_samples, self.ndim_hidden))
+        return prob, samples
 
     def get_v_given_h_dir(self, hidden_minibatch):
 
