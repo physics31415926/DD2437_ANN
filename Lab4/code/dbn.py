@@ -85,13 +85,13 @@ class DeepBeliefNet():
         out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
         print("hid--pen")
         out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
-        in3 = np.concatenate((lbl,out2 ), axis=1)
+        in3 = np.concatenate((lbl, out2), axis=1)
 
         for _ in range(self.n_gibbs_recog):
             print("pen+lbl--top")
             final_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)[1]
-            #self.label_log.append(np.argmax(in3[:, -n_labels:], axis=1))
+            self.label_log.append(np.argmax(in3[:, :n_labels], axis=1))
         predicted_lbl = in3[:, :n_labels]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
@@ -108,7 +108,6 @@ class DeepBeliefNet():
 
         n_sample = true_lbl.shape[0]
         n_labels = true_lbl.shape[1]
-
         records = []
         fig, ax = plt.subplots(1, 1, figsize=(3, 3))
         plt.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
@@ -125,19 +124,19 @@ class DeepBeliefNet():
         out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
         out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
 
-        in3 = np.concatenate((out2, lbl), axis=1)
+        in3 = np.concatenate((lbl, out2), axis=1)
 
         for _ in range(self.n_gibbs_gener):
             out3 = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(out3)[1]
-            in3[:, -n_labels:] = lbl[:, :]
-            pen = in3[:, :-n_labels]
+            in3[:, :n_labels] = lbl[:, :]
+            pen = in3[:, n_labels:]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
 
             records.append([ax.imshow(vis.reshape(self.image_size), cmap="bwr", vmin=0, vmax=1, animated=True,
                                       interpolation=None)])
-
+        print("generate mp4s/%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
         anim = stitch_video(fig, records).save("mp4s/%s.generate%d.mp4" % (name, np.argmax(true_lbl)))
 
         return
@@ -194,7 +193,7 @@ class DeepBeliefNet():
             # Get output from previous layer
             out2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(out1)[0]
             # Concatenate the output and the labels
-            in3 = np.concatenate((lbl_trainset,out2 ), axis=1)
+            in3 = np.concatenate((lbl_trainset, out2), axis=1)
             self.rbm_stack["pen+lbl--top"].cd1(in3, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
