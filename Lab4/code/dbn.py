@@ -238,7 +238,7 @@ class DeepBeliefNet():
                 # [TODO TASK 4.3] wake-phase : drive the network bottom to top using fixing the visible and label data.
                 vis_hid_out = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis_batch)[1]
                 hid_pen_out = self.rbm_stack['hid--pen'].get_h_given_v_dir(vis_hid_out)[1]
-                pen_top_in = np.concatenate((hid_pen_out, lbl_batch), axis=1)
+                pen_top_in = np.concatenate((lbl_batch, hid_pen_out), axis=1)
                 h_0 = self.rbm_stack['pen_lbl--top'].get_h_given_v(pen_top_in)[1]
                 h_k = h_0
                 # [TODO TASK 4.3] alternating Gibbs sampling in the top RBM for k='n_gibbs_wakesleep' steps, also store neccessary information for learning this RBM.
