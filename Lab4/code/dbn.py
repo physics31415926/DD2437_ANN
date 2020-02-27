@@ -120,16 +120,15 @@ class DeepBeliefNet():
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
         print("From the top RBM, drive the network")
         # normal distribution
-        random_img = np.random.randn(n_sample, self.sizes['vis'])
-        out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
-        out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
+        random = np.random.binomial(1, 0.5, (1, 500))
 
-        in3 = np.concatenate((lbl, out2), axis=1)
+        in3 = np.concatenate((lbl, random), axis=1)
 
         for _ in range(self.n_gibbs_gener):
+            in3[:, :n_labels] = lbl[:, :]
             out3 = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(out3)[1]
-            in3[:, :n_labels] = lbl[:, :]
+            
             pen = in3[:, n_labels:]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
