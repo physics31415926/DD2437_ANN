@@ -90,8 +90,8 @@ class DeepBeliefNet():
         for _ in range(self.n_gibbs_recog):
             print("pen+lbl--top")
             final_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
-            in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)[1]
-            self.label_log.append(np.argmax(in3[:, :n_labels], axis=1))
+            label, in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)
+            self.label_log.append(label)
         predicted_lbl = in3[:, :n_labels]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
@@ -120,15 +120,19 @@ class DeepBeliefNet():
         # top to the bottom visible layer (replace 'vis' from random to your generated visible layer).
         print("From the top RBM, drive the network")
         # normal distribution
-        random = np.random.binomial(1, 0.5, (1, 500))
+        # random = np.random.binomial(1, 0.5, (1, 500))
+        random_img = np.random.randn(n_sample, self.sizes['vis'])
+        random_img[random_img > 1] = 1
+        random_img[random_img < 0] = 0
 
-        in3 = np.concatenate((lbl, random), axis=1)
+        out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(random_img)[1]
+        out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
+        in3 = np.concatenate((lbl, out2), axis=1)
 
         for _ in range(self.n_gibbs_gener):
-            in3[:, :n_labels] = lbl[:, :]
             out3 = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(out3)[1]
-            
+            in3[:, :n_labels] = lbl[:, :]
             pen = in3[:, n_labels:]
             hid = self.rbm_stack['hid--pen'].get_v_given_h_dir(pen)[1]
             vis = self.rbm_stack['vis--hid'].get_v_given_h_dir(hid)[1]
