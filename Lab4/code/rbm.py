@@ -282,8 +282,8 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_h_to_v += self.learning_rate*np.dot(inps.T, (trgs-preds))/self.batch_size
-        self.delta_bias_v += self.learning_rate*np.sum(trgs-preds, axis=0)/self.batch_size
+        self.delta_weight_h_to_v = self.learning_rate*inps.T.dot(trgs-preds)/self.batch_size
+        self.delta_bias_v = self.learning_rate*np.sum(trgs-preds, axis=0)/self.batch_size
 
         self.weight_h_to_v += self.delta_weight_h_to_v
         self.bias_v += self.delta_bias_v
@@ -303,8 +303,8 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.3] find the gradients from the arguments (replace the 0s below) and update the weight and bias parameters.
 
-        self.delta_weight_v_to_h += self.learning_rate*np.dot(inps.T, (trgs-preds))/self.batch_size
-        self.delta_bias_h += self.learning_rate*np.sum(trgs-preds, axis=0)/self.batch_size
+        self.delta_weight_v_to_h = self.learning_rate*inps.T.dot(trgs-preds) /self.batch_size
+        self.delta_bias_h = self.learning_rate*np.sum(trgs-preds, axis=0) /self.batch_size
 
         self.weight_v_to_h += self.delta_weight_v_to_h
         self.bias_h += self.delta_bias_h
