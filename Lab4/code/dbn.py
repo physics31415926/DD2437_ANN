@@ -1,7 +1,7 @@
 from util import *
 from rbm import RestrictedBoltzmannMachine
 import numpy as np
-from matplotlib.pyplot import plot as plt
+import matplotlib.pyplot as plt
 
 
 class DeepBeliefNet():
