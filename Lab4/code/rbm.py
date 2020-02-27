@@ -124,9 +124,9 @@ class RestrictedBoltzmannMachine():
 
         # [TODO TASK 4.1] get the gradients from the arguments (replace the 0s below) and update the weight and bias parameters
 
-        self.delta_bias_v = self.learning_rate * np.sum(v_0 - v_k, axis=0)
+        self.delta_bias_v = self.learning_rate * np.sum(v_0 - v_k, axis=0)/self.batch_size
         self.delta_weight_vh = self.learning_rate * (np.dot(v_0.T, h_0) - np.dot(v_k.T, h_k))/self.batch_size
-        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))
+        self.delta_bias_h = self.learning_rate * (np.sum(h_0 - h_k, axis=0))/self.batch_size
 
         self.bias_v += self.delta_bias_v
         self.weight_vh += self.delta_weight_vh
@@ -186,10 +186,8 @@ class RestrictedBoltzmannMachine():
             # Note that this section can also be postponed until TASK 4.2, since in this task, stand-alone RBMs do not contain labels in visible layer.
             support = self.bias_v + np.dot(hidden_minibatch, self.weight_vh.T)
 
-            # threshold
-            support[support < -75] = -75
-            prob_label = softmax(support[:, -self.n_labels:])
-            prob_img = sigmoid(support[:, :-self.n_labels])
+            prob_label = softmax(support[:, :self.n_labels])
+            prob_img = sigmoid(support[:, self.n_labels:])
             prob = np.concatenate((prob_label, prob_img), axis=1)
             v_img = sample_binary(prob_img)
             v_label = sample_categorical(prob_label)

@@ -85,14 +85,14 @@ class DeepBeliefNet():
         out1 = self.rbm_stack['vis--hid'].get_h_given_v_dir(vis)[1]
         print("hid--pen")
         out2 = self.rbm_stack['hid--pen'].get_h_given_v_dir(out1)[1]
-        in3 = np.concatenate((out2, lbl), axis=1)
+        in3 = np.concatenate((lbl,out2 ), axis=1)
 
         for _ in range(self.n_gibbs_recog):
             print("pen+lbl--top")
             final_out = self.rbm_stack['pen+lbl--top'].get_h_given_v(in3)[1]
             in3 = self.rbm_stack['pen+lbl--top'].get_v_given_h(final_out)[1]
-            self.label_log.append(np.argmax(in3[:, -n_labels:], axis=1))
-        predicted_lbl = in3[:, -n_labels:]
+            #self.label_log.append(np.argmax(in3[:, -n_labels:], axis=1))
+        predicted_lbl = in3[:, :n_labels]
         print("accuracy = %.2f%%" % (100. * np.mean(np.argmax(predicted_lbl, axis=1) == np.argmax(true_lbl, axis=1))))
 
         return
@@ -182,7 +182,7 @@ class DeepBeliefNet():
             CD-1 training for hid--pen 
             """
             # Get output from previous layer
-            out1 = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[1]
+            out1 = self.rbm_stack["vis--hid"].get_h_given_v_dir(vis_trainset)[0]
             self.hid_pen_errors = self.rbm_stack["hid--pen"].cd1(out1, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="hid--pen")
 
@@ -192,9 +192,9 @@ class DeepBeliefNet():
             CD-1 training for pen+lbl--top 
             """
             # Get output from previous layer
-            out2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(out1)[1]
+            out2 = self.rbm_stack["hid--pen"].get_h_given_v_dir(out1)[0]
             # Concatenate the output and the labels
-            in3 = np.concatenate((out2, lbl_trainset), axis=1)
+            in3 = np.concatenate((lbl_trainset,out2 ), axis=1)
             self.rbm_stack["pen+lbl--top"].cd1(in3, n_iterations)
             self.savetofile_rbm(loc="trained_rbm", name="pen+lbl--top")
 
